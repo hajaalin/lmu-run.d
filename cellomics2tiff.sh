@@ -1,5 +1,4 @@
-#/bin/bash
-
+#!/bin/bash
 INPUT=/mnt/lmu-active/LMU-active2/user/FROM_CELLINSIGHT
 STAGING=/home/hajaalin/staging
 OUTPUT=/mnt/lmu-active/LMU-active2/user/FROM_CSC_LMU/CellInsight
