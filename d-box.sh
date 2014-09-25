@@ -4,9 +4,49 @@
 # Modified from https://pelle.io/delivering-gui-applications-with-docker/
 
 usage() {
-  echo "$0 <dev|fiji|cp> [container_name] [input] [output] [config-container]" 
+  echo "$0 [options] <dev|fiji|cp>"
+  echo "Options:"
+  echo "-n container_name"
+  echo "-i /input_folder"
+  echo "-o /output_folder"
+  echo "-c config_container"
+  echo "-t (run a test version of container)"
   exit 1
 }
+
+while getopts ":n:i:o:c:t" opt; do
+  case $opt in
+    i)
+      echo "-i was triggered, Parameter: $OPTARG" >&2
+      OPT_INPUT=$OPTARG
+      ;;
+    o)
+      echo "-o was triggered, Parameter: $OPTARG" >&2
+      OPT_OUTPUT=$OPTARG
+      ;;
+    c)
+      echo "-c was triggered, Parameter: $OPTARG" >&2
+      OPT_CONFIG=$OPTARG
+      ;;
+    n)
+      echo "-n was triggered, Parameter: $OPTARG" >&2
+      OPT_NAME=$OPTARG
+      ;;
+    t)
+      echo "-t was triggered, Parameter: $OPTARG" >&2
+      OPT_TEST="_test"
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+shift $((OPTIND-1))
 
 # tag for image name
 IMAGE=$1
@@ -17,12 +57,12 @@ fi
 # select image to run
 SSH="no"
 if [ $IMAGE == "dev" ]; then
-    DOCKER_IMAGE_NAME="hajaalin/devbox"
+    DOCKER_IMAGE_NAME="hajaalin${OPT_TEST}/devbox"
 elif [ $IMAGE == "fiji" ]; then
-    DOCKER_IMAGE_NAME="hajaalin/fijibox-lifeline"
+    DOCKER_IMAGE_NAME="hajaalin${OPT_TEST}/fijibox-lifeline"
     SSH="yes"
 elif [ $IMAGE == "cp" ]; then
-    DOCKER_IMAGE_NAME="hajaalin/cellprofilerbox"
+    DOCKER_IMAGE_NAME="hajaalin${OPT_TEST}/cellprofilerbox"
     SSH="yes"
 else
     usage
@@ -30,19 +70,19 @@ fi
 echo $DOCKER_IMAGE_NAME
 
 # local name for the container
-DOCKER_CONTAINER_NAME=${2:-$IMAGE-`date +%Y%m%d%H%M`}
+DOCKER_CONTAINER_NAME=${OPT_NAME:-$IMAGE-`date +%Y%m%d%H%M`}
 echo $DOCKER_CONTAINER_NAME
 
 # local folders to mount
-INPUT=${3:-"/mnt/lmu-active"}
-OUTPUT=${4:-"$HOME/tmp/container_output/$DOCKER_IMAGE_NAME/$DOCKER_CONTAINER_NAME"}
+INPUT=${OPT_INPUT:-"/mnt/lmu-active"}
+OUTPUT=${OPT_OUTPUT:-"$HOME/tmp/container_output/$DOCKER_IMAGE_NAME/$DOCKER_CONTAINER_NAME"}
 mkdir -p $OUTPUT
 chmod a+rwx $OUTPUT
 echo $INPUT
 echo $OUTPUT
 
 # container with config data (GitHub etc.)
-CONFIG_CONTAINER_NAME=${5:-"hajaalin-data"}
+CONFIG_CONTAINER_NAME=${OPT_CONFIG:-"hajaalin-data"}
 echo $CONFIG_CONTAINER_NAME
 
 
@@ -92,6 +132,7 @@ fi
 
 # connect with SSH
 if [ $SSH == "yes" ]; then
+    echo "connect with SSH"
     #wait for container to come up
     sleep 2
 
@@ -108,5 +149,6 @@ if [ $SSH == "yes" ]; then
 
 # attach to previously created container
 else
+    "connect with docker attach"
     docker attach $DOCKER_CONTAINER_NAME
 fi
