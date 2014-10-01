@@ -10,11 +10,12 @@ usage() {
   echo "-i /input_folder"
   echo "-o /output_folder"
   echo "-c config_container"
+  echo "-v volume_container"
   echo "-t (run a test version of container)"
   exit 1
 }
 
-while getopts ":n:i:o:c:t" opt; do
+while getopts ":n:i:o:c:v:t" opt; do
   case $opt in
     i)
       echo "-i was triggered, Parameter: $OPTARG" >&2
@@ -27,6 +28,10 @@ while getopts ":n:i:o:c:t" opt; do
     c)
       echo "-c was triggered, Parameter: $OPTARG" >&2
       OPT_CONFIG=$OPTARG
+      ;;
+    v)
+      echo "-v was triggered, Parameter: $OPTARG" >&2
+      OPT_VOLUME_CONTAINER=$OPTARG
       ;;
     n)
       echo "-n was triggered, Parameter: $OPTARG" >&2
@@ -110,9 +115,13 @@ else
 
     # mount volumes
     CMD="$CMD --volumes-from $CONFIG_CONTAINER_NAME"
-    CMD="$CMD -v $INPUT:/input"
-    CMD="$CMD -v $OUTPUT:/output"
-    
+    if [ -n "$OPT_VOLUME_CONTAINER" ]; then
+	CMD="$CMD --volumes-from $OPT_VOLUME_CONTAINER"
+    else
+        CMD="$CMD -v $INPUT:/input"
+        CMD="$CMD -v $OUTPUT:/output"
+    fi
+
     # mount docker inside devbox, run interactive
     if [ $IMAGE == "dev" ]; then
 	CMD="$CMD -v /var/run/docker.sock:/var/run/docker.sock"
