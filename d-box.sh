@@ -154,7 +154,7 @@ if [ $SSH == "yes" ]; then
 
     echo "ssh running at ${SSH_INTERFACE}:${SSH_PORT}"
 
-    ssh -vvvv -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -X dev@${SSH_INTERFACE} -p ${SSH_PORT}
+    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -X dev@${SSH_INTERFACE} -p ${SSH_PORT}
 
 # attach to previously created container
 else
